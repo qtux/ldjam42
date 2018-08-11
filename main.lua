@@ -18,11 +18,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
 suit = require "lib.suit"
+gamestate = require "lib.hump.gamestate"
+
+menu = {}
 
 function love.load()
+	gamestate.registerEvents()
+	gamestate.switch(menu)
 end
 
-function love.update(dt)
+function menu:update(dt)
 	suit.layout:reset(love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 15 * 3)
 	suit.layout:padding(10, 10)
 	suit.Label("Running out of space!", suit.layout:row(200, 30))
@@ -34,13 +39,13 @@ function love.update(dt)
 	end
 end
 
-function love.draw()
+function menu:draw()
 	-- draw the SUIT GUI
 	suit.draw()
 end
 
 function love.keypressed(key)
-	-- process key input
+	-- process common key input
 	if key == "escape" then
 		love.event.quit(0)
 	end
