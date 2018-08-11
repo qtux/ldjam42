@@ -17,31 +17,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
-local gamestate = require "lib.hump.gamestate"
 local suit = require "lib.suit"
 
-local menu = {}
-local game
+local game = {}
 
-function menu:init()
-	game = require "states.game"
-end
-
-function menu:update(dt)
+function game:update(dt)
 	suit.layout:reset(love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 15 * 3)
 	suit.layout:padding(10, 10)
-	suit.Label("Running out of space!", suit.layout:row(200, 30))
-	if suit.Button("Start the Game", suit.layout:row()).hit then
-		gamestate.switch(game)
-	end
-	if suit.Button("Quit", suit.layout:row()).hit then
-		love.event.quit(0)
-	end
+	suit.Label("Running the game!", suit.layout:row(200, 30))
 end
 
-function menu:draw()
+function game:draw()
 	-- draw the SUIT GUI
 	suit.draw()
 end
 
-return menu
+return game

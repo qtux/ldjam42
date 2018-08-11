@@ -17,12 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
-suit = require "lib.suit"
-gamestate = require "lib.hump.gamestate"
+-- load libraries
+local gamestate = require "lib.hump.gamestate"
 
-local menu = require "states.menu"
+local menu, game
 
 function love.load()
+	menu = require "states.menu"
+	game = require "states.game"
 	gamestate.registerEvents()
 	gamestate.switch(menu)
 end
