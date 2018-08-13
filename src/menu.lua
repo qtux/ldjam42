@@ -24,7 +24,7 @@ local menu = {}
 local game
 
 function menu:init()
-	game = require "states.game"
+	game = require "src.game"
 end
 
 function menu:update(dt)

@@ -23,8 +23,8 @@ local gamestate = require "lib.hump.gamestate"
 local menu, game
 
 function love.load()
-	menu = require "states.menu"
-	game = require "states.game"
+	menu = require "src.menu"
+	game = require "src.game"
 	gamestate.registerEvents()
 	gamestate.switch(menu)
 end
