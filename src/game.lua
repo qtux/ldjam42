@@ -40,7 +40,8 @@ function game:enter()
 		table.insert(snakes, {
 			segments={vector(5, i * 5), vector(4, i * 5), vector(3, i * 5), vector(2, i * 5), vector(1, i * 5)},
 			dir=vector(1, 0),
-			cooldown=false
+			cooldown=false,
+			lost=false
 		})
 	end
 	for i, snake in ipairs(snakes) do
@@ -81,12 +82,11 @@ function update_game()
 	end
 
 	-- check for snake head in own snake body
-	for _, snake in ipairs(snakes) do
-		for i = 2, #snake.segments do
-			if snake.segments[1] == snake.segments[i] then
-				print("GAMEOVER")
-				timer.clear()
-				return
+	for i, snake in ipairs(snakes) do
+		for j = 2, #snake.segments do
+			if snake.segments[1] == snake.segments[j] then
+				snake.loss = true
+				print("snake", i, "crashed into itself")
 			end
 		end
 	end
@@ -97,12 +97,25 @@ function update_game()
 			for _, segment in ipairs(snakes[i].segments) do
 				for _, other_segment in ipairs(snakes[j].segments) do
 					if segment == other_segment then
-						print("GAMEOVER")
-						timer.clear()
-						return
+						if segment == snakes[i].segments[1] then
+							snakes[i].loss = true
+							print("snake", i, "crashed into another snake")
+						end
+						if other_segment == snakes[j].segments[1] then
+							snakes[j].loss = true
+							print("snake", j, "crashed into another snake")
+						end
 					end
 				end
 			end
+		end
+	end
+
+	-- stop game if at least one of the snakes lost the game
+	for i, snake in ipairs(snakes) do
+		if snake.loss then
+			timer.clear()
+			return
 		end
 	end
 
