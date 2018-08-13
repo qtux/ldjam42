@@ -27,7 +27,7 @@ local board, snakes, cell_size
 function game:enter()
 	cell_size = vector(32, 32)
 	-- define board
-	board = {width=16, height=16, cells={}}
+	board = {width=16, height=16, cells={}, intervall=0.15}
 	for x = 0, board.width - 1 do
 		board.cells[x] = {}
 		for y = 0, board.height - 1 do
@@ -48,7 +48,8 @@ function game:enter()
 			board.cells[vec.x][vec.y] = i
 		end
 	end
-	timer.every(0.2, update_game)
+	timer.after(board.intervall, update_game)
+	timer.tween(60, board, {intervall=0.05}, "linear")
 end
 
 function update_game()
@@ -85,6 +86,7 @@ function update_game()
 			if snake.segments[1] == snake.segments[i] then
 				print("GAMEOVER")
 				timer.clear()
+				return
 			end
 		end
 	end
@@ -97,6 +99,7 @@ function update_game()
 					if segment == other_segment then
 						print("GAMEOVER")
 						timer.clear()
+						return
 					end
 				end
 			end
@@ -118,6 +121,8 @@ function update_game()
 		until not collides
 		board.cells[x][y] = "u"
 	end
+
+	timer.after(board.intervall, update_game)
 end
 
 function game:update(dt)
