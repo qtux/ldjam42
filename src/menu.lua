@@ -21,14 +21,18 @@ local gamestate = require "lib.hump.gamestate"
 local suit = require "lib.suit"
 
 local menu = {}
-local game
+local game, bg, offset
 
 function menu:init()
 	game = require "src.game"
+	bg = love.graphics.newImage("assets/title.png")
+	offset = {}
+	offset.x = (love.graphics.getWidth() - bg:getWidth()) / 2
+	offset.y = (love.graphics.getHeight() - bg:getHeight()) / 2
 end
 
 function menu:update(dt)
-	suit.layout:reset(love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 15 * 3)
+	suit.layout:reset(love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 65)
 	suit.layout:padding(10, 10)
 	suit.Label("Running out of space!", suit.layout:row(200, 30))
 	if suit.Button("Start the Game", suit.layout:row()).hit then
@@ -40,6 +44,7 @@ function menu:update(dt)
 end
 
 function menu:draw()
+	love.graphics.draw(bg, offset.x, offset.y)
 	-- draw the SUIT GUI
 	suit.draw()
 end
