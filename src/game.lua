@@ -22,9 +22,10 @@ local vector = require "lib.hump.vector"
 local timer = require "lib.hump.timer"
 
 local game = {}
-local board, snakes, cell_size, total_time, stop
+local board, snakes, cell_size, total_time, stop, font
 
 function game:enter()
+	font = love.graphics.newFont(18)
 	cell_size = vector(32, 32)
 	total_time = 0
 	stop = false
@@ -39,11 +40,18 @@ function game:enter()
 	-- define snake and add it to the board
 	snakes = {}
 	for i = 1, 2 do
+		local color
+		if i == 1 then
+			color = {1, 0, 0}
+		else
+			color = {0, 0, 1}
+		end
 		table.insert(snakes, {
 			segments={vector(5, i * 5), vector(4, i * 5), vector(3, i * 5), vector(2, i * 5), vector(1, i * 5)},
 			dir=vector(1, 0),
 			cooldown=false,
-			lost=false
+			lost=false,
+			color=color
 		})
 	end
 	for i, snake in ipairs(snakes) do
@@ -149,37 +157,41 @@ function game:update(dt)
 
 	suit.layout:reset((board.size.x + 2) * cell_size.x, 32)
 	suit.layout:padding(10, 10)
-	suit.Label("Running out of space!", suit.layout:row(200, 30))
-	if suit.Button("Restart", suit.layout:row()).hit then
+	if suit.Button("Restart (Return)", suit.layout:row(200, 30)).hit then
 		timer.clear()
 		game:enter()
 	end
-	suit.Label(string.format("Current speed: %.2f blocks/s", 1 / board.intervall), suit.layout:row())
-	suit.Label(string.format("Current time: %.2f s", total_time), suit.layout:row())
+	suit.Label(string.format("Speed: %.2f blocks/s", 1 / board.intervall), {font=font}, suit.layout:row())
+	suit.Label(string.format("Time: %.2f s", total_time), {font=font}, suit.layout:row())
 	for i, snake in ipairs(snakes) do
-		suit.Label(string.format("Snake %i length: %i", i, #snake.segments), suit.layout:row())
+		local snake_color = {font=font, color={normal = {bg = snake.color, fg = snake.color}}}
+		suit.Label(string.format("Snake %i length: %i", i, #snake.segments), snake_color, suit.layout:row())
 	end
-	if suit.Button("Quit", suit.layout:row()).hit then
+	if suit.Button("Quit (Esc)", suit.layout:row()).hit then
 		love.event.quit(0)
 	end
 	if stop then
-		green = {color={normal = {bg = {0, 1, 0}, fg = {0, 1, 0}}}}
-		red = {color={normal = {bg = {1, 0, 0}, fg = {1, 0, 0}}}}
+		local did_someone_win = false
 		for i, snake in ipairs(snakes) do
 			if not snake.loss then
-				suit.Label(string.format("Snake %i has won the game", i), green, suit.layout:row())
+				local snake_color = {font=font, color={normal = {bg = snake.color, fg = snake.color}}}
+				suit.Label(string.format("Snake %i has won the game", i), snake_color, suit.layout:row())
+				suit.Label(string.format("Score: %i", total_time * #snake.segments), snake_color, suit.layout:row())
+				did_someone_win = true
 				break
 			end
 		end
-		for i, snake in ipairs(snakes) do
-			if snake.loss then
-				suit.Label(string.format("Snake %i lost the game", i), red, suit.layout:row())
-			end
+		if not did_someone_win then
+			suit.Label("Nobody has won", suit.layout:row())
 		end
 	end
 end
 
 function game:keypressed(key)
+	if key == "return" then
+		timer.clear()
+		game:enter()
+	end
 	if key == "a" and not snakes[1].cooldown then
 		snakes[1].dir = vector(snakes[1].dir.y, -snakes[1].dir.x)
 		snakes[1].cooldown = true
@@ -209,11 +221,9 @@ function game:draw()
 			elseif board.cells[x][y] == "u" then
 				love.graphics.setColor(0, 1, 0)
 				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
-			elseif board.cells[x][y] == 1 then
-				love.graphics.setColor(1, 0, 0)
-				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
-			elseif board.cells[x][y] == 2 then
-				love.graphics.setColor(0, 0, 1)
+			elseif type(board.cells[x][y]) == "number" then
+				local color = snakes[board.cells[x][y]].color
+				love.graphics.setColor(color[1], color[2], color[3])
 				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
 			end
 		end

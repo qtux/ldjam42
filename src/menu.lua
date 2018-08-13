@@ -34,11 +34,11 @@ end
 function menu:update(dt)
 	suit.layout:reset(love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 65)
 	suit.layout:padding(10, 10)
-	suit.Label("Running out of space!", suit.layout:row(200, 30))
-	if suit.Button("Start the Game", suit.layout:row()).hit then
+	suit.Label("Snakevasion", {font=love.graphics.newFont(20)}, suit.layout:row(200, 30))
+	if suit.Button("Start the Game (Return)", suit.layout:row()).hit then
 		gamestate.switch(game)
 	end
-	if suit.Button("Quit", suit.layout:row()).hit then
+	if suit.Button("Quit (Esc)", suit.layout:row()).hit then
 		love.event.quit(0)
 	end
 end
@@ -47,6 +47,13 @@ function menu:draw()
 	love.graphics.draw(bg, offset.x, offset.y)
 	-- draw the SUIT GUI
 	suit.draw()
+end
+
+function menu:keypressed(key)
+	-- process common key input
+	if key == "return" then
+		gamestate.switch(game)
+	end
 end
 
 return menu
