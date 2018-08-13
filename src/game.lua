@@ -163,11 +163,17 @@ function game:update(dt)
 		love.event.quit(0)
 	end
 	if stop then
+		green = {color={normal = {bg = {0,1,0}, fg = {0,1,0}}}}
+		red = {color={normal = {bg = {1,0,0}, fg = {1,0,0}}}}
+		for i, snake in ipairs(snakes) do
+			if not snake.loss then
+				suit.Label(string.format("Snake %i has won the game", i), green, suit.layout:row())
+				break
+			end
+		end
 		for i, snake in ipairs(snakes) do
 			if snake.loss then
-				suit.Label(string.format("Snake %i lost the game", i), suit.layout:row())
-			else
-				suit.Label(string.format("Snake %i has won the game", i), suit.layout:row())
+				suit.Label(string.format("Snake %i lost the game", i), red, suit.layout:row())
 			end
 		end
 	end
