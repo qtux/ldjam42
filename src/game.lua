@@ -22,7 +22,7 @@ local vector = require "lib.hump.vector"
 local timer = require "lib.hump.timer"
 
 local game = {}
-local board, snake, cell_size
+local board, snakes, cell_size
 
 function game:enter()
 	cell_size = vector(32, 32)
@@ -35,45 +35,73 @@ function game:enter()
 		end
 	end
 	-- define snake and add it to the board
-	snake = {
-		segments={vector(5, 0), vector(4, 0), vector(3, 0), vector(2, 0), vector(1, 0)},
-		dir=vector(1, 0),
-		cooldown=false
-	}
-	for _, vec in ipairs(snake.segments) do
-		board.cells[vec.x][vec.y] = "s"
+	snakes = {}
+	for i = 1, 2 do
+		table.insert(snakes, {
+			segments={vector(5, i * 5), vector(4, i * 5), vector(3, i * 5), vector(2, i * 5), vector(1, i * 5)},
+			dir=vector(1, 0),
+			cooldown=false
+		})
 	end
-	timer.every(0.1, update_game)
+	for i, snake in ipairs(snakes) do
+		for _, vec in ipairs(snake.segments) do
+			board.cells[vec.x][vec.y] = i
+		end
+	end
+	timer.every(0.2, update_game)
 end
 
 function update_game()
-	-- determine new snake head
-	local head = snake.segments[1] + snake.dir
-	head.x = head.x % board.width
-	head.y = head.y % board.height
-	local tail = snake.segments[#snake.segments]
+	-- update snakes
+	for i, snake in ipairs(snakes) do
+		-- determine new snake head
+		local head = snake.segments[1] + snake.dir
+		head.x = head.x % board.width
+		head.y = head.y % board.height
 
-	-- test if head touches body
-	for _, vec in ipairs(snake.segments) do
-		if head == vec then
-			print("GAMEOVER")
+		-- keep tail if head is on food
+		local tail = snake.segments[#snake.segments]
+		if board.cells[head.x][head.y] == "u" then
+			table.insert(snake.segments, tail)
+		else
+			board.cells[tail.x][tail.y] = " "
+		end
+
+		-- update internal snake representation and reset snake cooldown
+		for j = #snake.segments, 2, -1 do
+			snake.segments[j] = snake.segments[j - 1]
+		end
+		snake.segments[1] = head
+		snake.cooldown = false
+	end
+	-- update board cells with new snake heads
+	for i, snake in ipairs(snakes) do
+		board.cells[snake.segments[1].x][snake.segments[1].y] = i
+	end
+
+	-- check for snake head in own snake body
+	for _, snake in ipairs(snakes) do
+		for i = 2, #snake.segments do
+			if snake.segments[1] == snake.segments[i] then
+				print("GAMEOVER")
+				timer.clear()
+			end
 		end
 	end
 
-	-- update tail and head (keep tail if head is on food)
-	if board.cells[head.x][head.y] == "u" then
-		table.insert(snake.segments, tail)
-	else
-		board.cells[tail.x][tail.y] = " "
+	-- check for overlapping snakes
+	for i = 1, #snakes do
+		for j = i + 1, #snakes do
+			for _, segment in ipairs(snakes[i].segments) do
+				for _, other_segment in ipairs(snakes[j].segments) do
+					if segment == other_segment then
+						print("GAMEOVER")
+						timer.clear()
+					end
+				end
+			end
+		end
 	end
-	-- update head in any case
-	board.cells[head.x][head.y] = "s"
-	-- update internal snake representation and reset snake cooldown
-	for i = #snake.segments, 2, -1 do
-		snake.segments[i] = snake.segments[i - 1]
-	end
-	snake.segments[1] = head
-	snake.cooldown = false
 
 	-- place random food
 	if math.random() > 0.98 then
@@ -82,8 +110,10 @@ function update_game()
 			x, y = math.random(0, board.width - 1), math.random(0, board.height - 1)
 			-- check for collision with snake
 			local collides = false
-			for _, vec in ipairs(snake.segments) do
-				collides = collides or (vec.x == x and vec.y == y)
+			for _, snake in ipairs(snakes) do
+				for _, vec in ipairs(snake.segments) do
+					collides = collides or (vec.x == x and vec.y == y)
+				end
 			end
 		until not collides
 		board.cells[x][y] = "u"
@@ -97,12 +127,19 @@ function game:update(dt)
 end
 
 function game:keypressed(key)
-	if love.keyboard.isDown("a") and not snake.cooldown then
-		snake.dir = vector(snake.dir.y, -snake.dir.x)
-		snake.cooldown = true
-	elseif love.keyboard.isDown("d") and not snake.cooldown then
-		snake.dir = vector(-snake.dir.y, snake.dir.x)
-		snake.cooldown = true
+	if key == "a" and not snakes[1].cooldown then
+		snakes[1].dir = vector(snakes[1].dir.y, -snakes[1].dir.x)
+		snakes[1].cooldown = true
+	elseif key == "d" and not snakes[1].cooldown then
+		snakes[1].dir = vector(-snakes[1].dir.y, snakes[1].dir.x)
+		snakes[1].cooldown = true
+	end
+	if key == "left" and not snakes[2].cooldown then
+		snakes[2].dir = vector(snakes[2].dir.y, -snakes[2].dir.x)
+		snakes[2].cooldown = true
+	elseif key == "right" and not snakes[2].cooldown then
+		snakes[2].dir = vector(-snakes[2].dir.y, snakes[2].dir.x)
+		snakes[2].cooldown = true
 	end
 end
 
@@ -117,11 +154,14 @@ function game:draw()
 				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
 				love.graphics.setColor(0.5, 0.5, 0.5)
 				love.graphics.rectangle("line", point.x, point.y, cell_size.x, cell_size.y)
-			elseif board.cells[x][y] == "s" then
-				love.graphics.setColor(1, 0, 0)
-				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
 			elseif board.cells[x][y] == "u" then
 				love.graphics.setColor(0, 1, 0)
+				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
+			elseif board.cells[x][y] == 1 then
+				love.graphics.setColor(1, 0, 0)
+				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
+			elseif board.cells[x][y] == 2 then
+				love.graphics.setColor(0, 0, 1)
 				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
 			end
 		end
