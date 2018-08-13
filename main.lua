@@ -1,5 +1,5 @@
 --[[
-Ludum Dare 42: Running out of space.
+Snakevasion (Ludum Dare 42 - Running out of space)
 
 Copyright (C) 2018  Matthias Gazzari
 

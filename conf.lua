@@ -1,5 +1,5 @@
 --[[
-Ludum Dare 42: Running out of space.
+Snakevasion (Ludum Dare 42 - Running out of space)
 
 Copyright (C) 2018  Matthias Gazzari
 
@@ -18,6 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
 function love.conf(t)
-	t.window.title = "Running out of space!"
+	t.window.title = "Snakevasion"
 	t.version = "11.1"
 end
