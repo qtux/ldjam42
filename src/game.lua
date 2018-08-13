@@ -22,12 +22,14 @@ local vector = require "lib.hump.vector"
 local timer = require "lib.hump.timer"
 
 local game = {}
-local board, snakes, cell_size
+local board, snakes, cell_size, total_time, stop
 
 function game:enter()
 	cell_size = vector(32, 32)
+	total_time = 0
+	stop = false
 	-- define board
-	board = {offset=cell_size, size=vector(16, 16), cells={}, intervall=0.15, min_intervall=0.03}
+	board = {offset=cell_size, size=vector(16, 16), cells={}, intervall=0.15, min_intervall=0.025}
 	for x = 0, board.size.x - 1 do
 		board.cells[x] = {}
 		for y = 0, board.size.y - 1 do
@@ -115,6 +117,7 @@ function update_game()
 	for i, snake in ipairs(snakes) do
 		if snake.loss then
 			timer.clear()
+			stop = true
 			return
 		end
 	end
@@ -139,9 +142,35 @@ function update_game()
 end
 
 function game:update(dt)
-	suit.layout:reset(love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 15 * 3)
-	suit.layout:padding(10, 10)
 	timer.update(dt)
+	if not stop then
+		total_time = total_time + dt
+	end
+
+	suit.layout:reset((board.size.x + 2) * cell_size.x, 32)
+	suit.layout:padding(10, 10)
+	suit.Label("Running out of space!", suit.layout:row(200, 30))
+	if suit.Button("Restart", suit.layout:row()).hit then
+		timer.clear()
+		game:enter()
+	end
+	suit.Label(string.format("Current speed: %.2f blocks/s", 1 / board.intervall), suit.layout:row())
+	suit.Label(string.format("Current time: %.2f s", total_time), suit.layout:row())
+	for i, snake in ipairs(snakes) do
+		suit.Label(string.format("Snake %i length: %i", i, #snake.segments), suit.layout:row())
+	end
+	if suit.Button("Quit", suit.layout:row()).hit then
+		love.event.quit(0)
+	end
+	if stop then
+		for i, snake in ipairs(snakes) do
+			if snake.loss then
+				suit.Label(string.format("Snake %i lost the game", i), suit.layout:row())
+			else
+				suit.Label(string.format("Snake %i has won the game", i), suit.layout:row())
+			end
+		end
+	end
 end
 
 function game:keypressed(key)
