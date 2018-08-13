@@ -27,10 +27,10 @@ local board, snakes, cell_size
 function game:enter()
 	cell_size = vector(32, 32)
 	-- define board
-	board = {width=16, height=16, cells={}, intervall=0.15}
-	for x = 0, board.width - 1 do
+	board = {offset=cell_size, size=vector(16, 16), cells={}, intervall=0.15, min_intervall=0.03}
+	for x = 0, board.size.x - 1 do
 		board.cells[x] = {}
-		for y = 0, board.height - 1 do
+		for y = 0, board.size.y - 1 do
 			board.cells[x][y] = " "
 		end
 	end
@@ -50,7 +50,7 @@ function game:enter()
 		end
 	end
 	timer.after(board.intervall, update_game)
-	timer.tween(60, board, {intervall=0.05}, "linear")
+	timer.tween(60, board, {intervall=board.min_intervall}, "linear")
 end
 
 function update_game()
@@ -58,8 +58,8 @@ function update_game()
 	for i, snake in ipairs(snakes) do
 		-- determine new snake head
 		local head = snake.segments[1] + snake.dir
-		head.x = head.x % board.width
-		head.y = head.y % board.height
+		head.x = head.x % board.size.x
+		head.y = head.y % board.size.y
 
 		-- keep tail if head is on food
 		local tail = snake.segments[#snake.segments]
@@ -123,7 +123,7 @@ function update_game()
 	if math.random() > 0.98 then
 		local x, y
 		repeat
-			x, y = math.random(0, board.width - 1), math.random(0, board.height - 1)
+			x, y = math.random(0, board.size.x - 1), math.random(0, board.size.y - 1)
 			-- check for collision with snake
 			local collides = false
 			for _, snake in ipairs(snakes) do
@@ -162,11 +162,10 @@ function game:keypressed(key)
 end
 
 function game:draw()
-	offset = cell_size
 	-- draw the board
 	for x = 0, #board.cells do
 		for y = 0, #board.cells[x] do
-			point = offset + vector(x, y):permul(cell_size)
+			point = board.offset + vector(x, y):permul(cell_size)
 			if board.cells[x][y] == " " then
 				love.graphics.setColor(0.1, 0.1, 0.3)
 				love.graphics.rectangle("fill", point.x, point.y, cell_size.x, cell_size.y)
